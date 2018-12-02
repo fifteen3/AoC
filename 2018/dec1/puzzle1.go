@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	cli         gocli.Cli
-	usageFlag   bool
-	versionFlag bool
+	cli          gocli.Cli
+	usageFlag    bool
+	versionFlag  bool
+	filenameFlag bool
 )
 
 func init() {
@@ -22,10 +23,10 @@ func init() {
 	flag.BoolVar(&usageFlag, "help", false, "Display usage")
 	flag.BoolVar(&versionFlag, "version", false, "Display version")
 	flag.BoolVar(&versionFlag, "v", false, "Display version")
+	flag.BoolVar(&filenameFlag, "filename", false, "File containing data set to load")
 }
 
 func main() {
-	fmt.Printf("hello, world\n")
 	cli = gocli.Cli{
 		Name:        "puzzle1",
 		Version:     "0.0.1",
@@ -38,10 +39,9 @@ func main() {
 	cli.Init()
 
 	if cli.SubCommand == "solveA" {
-		//fmt.Println(strings.Join(cli.SubCommandArgs, " "))
-		fmt.Println(solveA())
+		fmt.Println(solveA(cli.SubCommandArgsMap["filename"]))
 	} else if cli.SubCommand == "solveB" {
-		fmt.Println(solveB())
+		fmt.Println(solveB(cli.SubCommandArgsMap["filename"]))
 	} else if versionFlag {
 		cli.PrintVersion(true)
 	} else {
@@ -49,8 +49,8 @@ func main() {
 	}
 }
 
-func solveA() int {
-	changes := readInput("puzzle1.input")
+func solveA(filename string) int {
+	changes := readInput(filename)
 	acc := 0
 	for i := 0; i < len(changes); i++ {
 		number, err := strconv.Atoi(changes[i])
@@ -62,8 +62,8 @@ func solveA() int {
 	return acc
 }
 
-func solveB() int {
-	changes := readInput("puzzle1.input")
+func solveB(filename string) int {
+	changes := readInput(filename)
 	frequencies := make(map[string]int)
 	firstDouble := 0
 	acc := 0
@@ -74,25 +74,18 @@ func solveB() int {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("before acc: ", acc)
-		fmt.Println("next number: ", number)
 		acc = acc + number
 		freq_index := strconv.Itoa(acc)
-		fmt.Println("after acc: ", acc)
 		frequencies[freq_index] += 1
 		if frequencies[freq_index] == 2 {
 			firstDouble = acc
-			fmt.Println("freq: ", freq_index)
-			fmt.Println("freq_count: ", frequencies[freq_index])
 			break
 		}
 		if total_changes == i+1 {
-			fmt.Println("restart loop -- freq: ", freq_index)
 			i = -1
 		}
 	}
 	return firstDouble
-
 }
 
 func readInput(filename string) []string {
