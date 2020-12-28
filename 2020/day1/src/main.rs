@@ -15,6 +15,7 @@ fn read_in_lines(filename: impl AsRef<Path>) -> Vec<String> {
 fn main(){
     let args: Vec<String> = env::args().collect();
     let filename = &args[3].to_string();
+    println!("filename: {}", filename);
     let target_sum = args[2].to_string();
     let part = args[1].to_string();
     let numbers: Vec<String> = read_in_lines(filename);
@@ -24,13 +25,16 @@ fn main(){
 
         println!("{} * {} = {}", found_numbers[0], found_numbers[1], total);
     } else if part.contains('2') {
-        let parts: i32 = 3;
+        let parts: usize = 3;
         let target = target_sum.parse::<i32>().unwrap();
         let digits : Vec<i32> = numbers.iter().map(|x| x.parse::<i32>().unwrap()).collect();
-        let found_numbers = part2::find_sum(target,parts,digits);
-        let total = found_numbers.iter().fold(1, |acc, x| acc * x);
+        let found_numbers = match part2::find_sum_idiomatic(target,parts, &digits) {
+            Some(n) => n,
+            None => vec![]
+        };
+        let total: i32 = found_numbers.iter().product();
 
-        println!("{} * {} = {}", found_numbers[0], found_numbers[1], total);
+        println!("{} * {} * {} = {}", found_numbers[0], found_numbers[1], found_numbers[2], total);
 
     }
 }
