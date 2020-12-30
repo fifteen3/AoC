@@ -28,7 +28,7 @@ fn main(){
         let parts: usize = 3;
         let target = target_sum.parse::<i32>().unwrap();
         let digits : Vec<i32> = numbers.iter().map(|x| x.parse::<i32>().unwrap()).collect();
-        let found_numbers = match part2::find_sum_idiomatic(target,parts, &digits) {
+        let found_numbers = match part2::find_sum(target, parts, &digits) {
             Some(n) => n,
             None => vec![]
         };
