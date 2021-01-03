@@ -13,10 +13,12 @@ pub fn read_in_lines(filename: impl AsRef<Path>) -> Vec<String> {
     for l in &lines {
         if *l == String::from("") {
             grouped.push(string_set.to_string());
+            string_set = String::new();
         } else {
             string_set.push_str(" ");
             string_set.push_str(l.as_str());
         }
     }
+    grouped.push(string_set);
     grouped
 }
