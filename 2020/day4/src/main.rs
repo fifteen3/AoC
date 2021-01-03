@@ -38,8 +38,8 @@ fn main() {
             println!("part1 matches: {:?}", matches);
             println!("filename: {}", filename);
             let dataset = dataset::read_in_lines(filename);
-            let valid_creds = part1::attempt(dataset.clone());
-            println!("{:?}",  valid_creds);
+            let valid_passports = part1::attempt(dataset.clone());
+            println!("Valid passports: {:?}",  valid_passports.len());
         }
     }
     if let Some(matches) = matches.subcommand_matches("part2") {
@@ -48,8 +48,9 @@ fn main() {
             //println!("part2 matches: {:?}", matches);
            // println!("filename: {}", matches.value_of("file").unwrap().to_string());
             let dataset = dataset::read_in_lines(filename);
-            //let valid_creds = part2::attempt(dataset.clone(), rise, run);
-            println!("{:?}",  dataset);
+            let valid_passports = part1::attempt(dataset.clone());
+            let valid_values = part2::attempt(valid_passports);
+            println!("Valid values: {:?}",  valid_values.len());
             //println!("{}",  valid_creds);
         }
     }
