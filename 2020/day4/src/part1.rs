@@ -1,16 +1,5 @@
 use std::collections::HashSet;
 use regex::Regex;
-#[derive(Debug)]
-struct Passport {
-    byr: String,
-    iyr: String,
-    eyr: String,
-    hgt: String,
-    hcl: String,
-    ecl: String,
-    pid: String,
-    cid: String,
-}
 pub fn attempt(dataset: Vec<String>) -> Vec<String> {
     let mut expected_properties = HashSet::new();
     expected_properties.insert("byr".to_string());
