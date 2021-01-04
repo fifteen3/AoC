@@ -5,6 +5,7 @@ use clap::{
     SubCommand
 };
 mod part1;
+mod part2;
 mod dataset;
 fn main() {
     let matches = App::new("AoC Day 4")
@@ -51,7 +52,6 @@ fn main() {
             let valid_passports = part1::attempt(dataset.clone());
             let valid_values = part2::attempt(valid_passports);
             println!("Valid values: {:?}",  valid_values.len());
-            //println!("{}",  valid_creds);
         }
     }
 }
