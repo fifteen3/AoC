@@ -29,7 +29,7 @@ fn main() {
                         .long("file")
                         .value_name("FILE")
                         .help("supply problem set")
-                        .required(true)
+                        .required(false)
                         .takes_value(true)
                         ))
         .get_matches();
@@ -40,16 +40,16 @@ fn main() {
             println!("filename: {}", filename);
             let dataset = dataset::read_in_lines(filename);
             let found_seat_assignment = part1::attempt(dataset.clone());
-            println!("Seat Assignment: {:?}",  found_seat_assignment.len());
+            println!("Seat Assignment: {:?}",  found_seat_assignment);
         }
     }
     if let Some(matches) = matches.subcommand_matches("part2") {
         if matches.is_present("file") {
             let filename = matches.value_of("file").unwrap().to_string();
             let dataset = dataset::read_in_lines(filename);
-            let valid_passports = part1::attempt(dataset.clone());
-            let valid_values = part2::attempt(valid_passports);
-            println!("Valid values: {:?}",  valid_values.len());
+            let highest_seat: Vec<isize>= vec![part1::attempt(dataset.clone())];
+            let valid_values = part2::attempt(highest_seat);
+            println!("Valid values: {:?}",  valid_values);
         }
     }
 }

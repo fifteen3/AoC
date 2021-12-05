@@ -1,12 +1,12 @@
-pub fn attempt(dataset: Vec<String>) -> Vec<String> {
-    return vec!["44".to_string(), "5".to_string()];
+pub fn attempt(dataset: Vec<isize>) -> isize {
+    return dataset[0];
 }
 #[cfg(test)]
 mod test {
     use super::*;
     #[test]
     fn attempt1() {
-        let row_col = attempt(vec!["FBFBBFFRLR".to_string()]);
-        assert_eq!(vec!["44".to_string(), "5".to_string()], row_col);
+        let row_col = attempt(vec![44, 5]);
+        assert_eq!(44, row_col);
     }
 }
