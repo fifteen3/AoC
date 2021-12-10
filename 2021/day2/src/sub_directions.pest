@@ -5,9 +5,6 @@ down = {"down"}
 
 magnitude = { (ASCII_DIGIT)+ }
 
-verb = { forward | up | down | backward }
-
 instruction = { (forward | up | down | backward ) ~ " "+ ~ magnitude }
-
 
 file = { SOI ~ (instruction ~ ("\r\n" | "\n")*)* ~ EOI }
