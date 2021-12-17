@@ -1,0 +1,6 @@
+one =  { "1" }
+zero =  { "0" }
+
+instruction = { (one | zero)+ }
+
+file = { SOI ~ (instruction ~ ("\r\n" | "\n")*)* ~ EOI }
