@@ -1,28 +1,18 @@
 pub fn window_sum(numbers: &Vec<i32>) -> i32 {
-    let mut sum: i32 = 0;
-    let mut last: i32 = 0;
-    let mut increases: i32 = 0;
-    let mut window = numbers.iter().enumerate();
-    window.for_each(|(i, number)| {
-        let first = *number;
-        if i + 1 < numbers.len() && i + 2 < numbers.len() {
-            let second = numbers[i + 1];
-            let third = numbers[i + 2];
-            println!("{} {} {}", first, second, third);
-            sum = first + second + third;
-            if last > 0 {
-                if sum > last {
-                    increases += 1;
+    numbers
+        .windows(3)
+        .fold((0, None), |(mut i, prev), number| {
+            let first: i32 = number.to_owned()[0];
+            if let Some(prev) = prev {
+                if first < prev {
+                    i += 1;
                 }
             }
-            println!("The sum is: {}", sum);
-            println!("The last is: {}", last);
-            println!("increase count: {}", increases);
-            last = sum;
-        }
-    });
-    return increases;
+            (i, Some(first))
+        })
+        .0
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

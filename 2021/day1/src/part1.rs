@@ -1,18 +1,16 @@
 pub fn count_increases(numbers: &Vec<i32>) -> i32 {
-    let mut last: i32 = 0;
-    let mut current: i32 = 0;
-    let mut increases: i32 = 0;
-    let values = numbers.iter();
-    for number in values {
-        current = *number;
-        if last > 0 {
-            if current > last {
-                increases += 1;
+    numbers
+        .windows(1)
+        .fold((0, None), |(mut i, prev), number| {
+            let first: i32 = number.to_owned()[0];
+            if let Some(prev) = prev {
+                if first < prev {
+                    i += 1;
+                }
             }
-        }
-        last = current;
-    }
-    return increases;
+            (i, Some(first))
+        })
+        .0
 }
 
 
