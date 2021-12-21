@@ -4,6 +4,7 @@ extern crate pest_derive;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fmt;
+use std::fs;
 
 use pest::{
     Parser,
@@ -16,16 +17,18 @@ pub struct BingoParser;
 struct BingoParlor {
     cards: Vec<BingoCard>,
     picks: Vec<i32>,
+    total_picks: i32,
 }
 
 impl BingoParlor {
-    fn new(input_cards: Vec<Vec<Vec<i32>>>, input_picks: Vec<i32>) -> Self {
+    fn new(input_cards: Vec<Vec<Vec<i32>>>, input_picks: Vec<i32>, total_picks: i32) -> Self {
         let bingo_cards = input_cards.iter().map(|card| {
             BingoCard::new(card.clone())
         }).collect();
         Self {
             cards: bingo_cards,
             picks: input_picks,
+            total_picks,
         }
     }
 
@@ -33,11 +36,11 @@ impl BingoParlor {
         &self.cards[card_index]
     }
 
-    fn execute(&mut self) -> i32 {
+    fn play(&mut self) -> i32 {
         println!("executing picks: {:?}", self.picks);
         let mut winner = BingoCard::new(Vec::new());
         let mut numbers_found = VecDeque::new();
-        'picks: for picks in self.picks.windows(5){
+        'picks: for picks in self.picks.windows(self.total_picks as usize){
             println!("picks: {:?}", picks);
             'pick: for pick in picks.iter(){
                 if numbers_found.contains(&pick){
@@ -60,12 +63,12 @@ impl BingoParlor {
                 }
             }
         }
-        let sum_of_numbers = winner.clone().numbers.into_iter().fold(0, |acc, x| acc + x.into_iter().sum::<i32>());
-        println!("winner: {:?}", winner.clone().rows.into_keys().sum::<i32>());
-        println!("winner: {:?}", winner.clone().rows.into_keys().sum::<i32>());
-        println!("winner:\n{}", winner.clone().index.into_keys().sum::<i32>());
+        let sum_of_numbers = winner.sum_of_numbers;
+        let total_card_sum = winner.clone().index.into_keys().sum::<i32>();
+        let final_score = total_card_sum - sum_of_numbers;
+        println!("final score:\n{}", final_score);
         println!("winning numbers: {:?}", winner.find_complete().into_iter().sum::<i32>());
-        println!("numbers found:\n{:?}", numbers_found);
+        println!("numbers found:\n{:?}", final_score * numbers_found.pop_back().unwrap());
        4512.to_owned() 
     }
 }
@@ -93,6 +96,7 @@ pub struct BingoCard {
     complete: bool,
     row_limit: i32,
     col_limit: i32,
+    sum_of_numbers: i32,
 }   // BingoCard
 
 impl BingoCard {
@@ -120,6 +124,7 @@ impl BingoCard {
             complete: false.to_owned(),
             row_limit,
             col_limit,
+            sum_of_numbers: 0,
         }
     }
     //given a number look up in the index if the number is in the card
@@ -137,6 +142,7 @@ impl BingoCard {
         let mut col_count = self.cols.entry(location.col).or_insert(0);
         *row_count += 1;
         *col_count += 1;
+        self.sum_of_numbers += self.numbers[location.row as usize][location.col as usize];
         if *self.rows.get(&location.row).unwrap() == self.row_limit {
             self.update_complete(true.to_owned());
         }
@@ -153,14 +159,14 @@ impl BingoCard {
         let mut numbers = Vec::new();
         if self.complete {
            for row in &self.rows {
-                if *row.1 == 5 as i32 {
+                if *row.1 == self.row_limit {
                      println!("match on row {}", row.0);
                      numbers = self.numbers[*row.0 as usize].clone();
                      return numbers;
                 }
            }
            for col in &self.cols {
-                if *col.1 == 5 as i32{
+                if *col.1 == self.col_limit {
                      println!("match on col {}", col.0);
                      numbers = self.numbers.iter().map(|row| row[*col.0 as usize]).collect();
                      return numbers;
@@ -184,10 +190,6 @@ impl fmt::Display for BingoCard {
 }
 
 
-
-fn main() {
-    println!("Hello, world!");
-}
 
 fn parse(input: &str) -> BingoParlor{
     let mut rollcall: Vec<i32> = Vec::new();
@@ -216,7 +218,18 @@ fn parse(input: &str) -> BingoParlor{
     println!("rollcall: {:?}", rollcall);
     println!("boards: {:?}", boards);
 
-    return BingoParlor::new(boards, rollcall);
+    return BingoParlor::new(boards, rollcall, 5);
+}
+pub fn read_in_lines(filename: String) -> String {
+    let source_file = fs::read_to_string(filename).expect("Failed to read file");
+    return source_file;
+
+}
+
+fn main() {
+    let input = read_in_lines("day4.txt".to_owned());
+    let mut bingo_player = parse(&input);
+    bingo_player.play();
 }
 
 #[cfg(test)]
@@ -244,7 +257,7 @@ mod tests {
  2  0 12  3  7
 ";
         let mut bingo_parlor = super::parse(input);
-        let result = bingo_parlor.execute();
+        let result = bingo_parlor.play();
         assert_eq!(result, 4512);
     }
 }
