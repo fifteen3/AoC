@@ -36,40 +36,43 @@ impl BingoParlor {
         &self.cards[card_index]
     }
 
-    fn play(&mut self) -> i32 {
-        println!("executing picks: {:?}", self.picks);
+    fn play(&mut self) -> [i32; 2] {
         let mut winner = BingoCard::new(Vec::new());
+        let mut final_score: i32 = 0;
         let mut numbers_found = VecDeque::new();
+        let mut num_winners = 0;
+        let mut winners = VecDeque::new();
+        let total_cards = self.cards.clone().iter().count();
         'picks: for picks in self.picks.windows(self.total_picks as usize){
-            println!("picks: {:?}", picks);
             'pick: for pick in picks.iter(){
-                if numbers_found.contains(&pick){
-                    continue 'pick;
-                }
-                numbers_found.push_back(pick);
+                    if numbers_found.contains(&pick){
+                        continue 'pick;
+                    }
+                    numbers_found.push_back(pick);
                 'cards: for bingo_card in self.cards.iter_mut(){
-                    if bingo_card.is_number_in_card(*pick) {
-                        println!("matched pick:\n{}, {}", bingo_card, pick);
+                    if bingo_card.is_number_in_card(*pick) && !bingo_card.complete {
                         let location = bingo_card.get_location(*pick);
-                        println!("location: {:?}", location);
                         bingo_card.update_counts(&location.unwrap().clone());
                         bingo_card.find_complete();
                         if bingo_card.complete {
-                            winner = bingo_card.clone();
-                            println!("bingo card complete:\n{}", bingo_card);
-                            break 'picks;
+                            num_winners += 1;
+                            bingo_card.set_last_selected(pick);
+                            winners.push_front(bingo_card.clone());
                         }
+                    } else if bingo_card.complete && num_winners == total_cards {
+                        break 'picks;
+                    }
+                    else if num_winners > total_cards {
+                        break 'picks;
                     }
                 }
             }
         }
-        let sum_of_numbers = winner.sum_of_numbers;
-        let total_card_sum = winner.clone().index.into_keys().sum::<i32>();
-        let final_score = total_card_sum - sum_of_numbers;
-        println!("final score:\n{}", final_score);
-        println!("winning numbers: {:?}", winner.find_complete().into_iter().sum::<i32>());
-        println!("numbers found:\n{:?}", final_score * numbers_found.pop_back().unwrap());
-       4512.to_owned() 
+        let first_winner = winners.clone().pop_back().unwrap();
+        let last_winner = winners.clone().pop_front().unwrap();
+        println!("part 1: {}", first_winner.get_score());
+        println!("part 2: {} ", last_winner.get_score());
+        return [first_winner.get_score(), last_winner.get_score()];
     }
 }
 
@@ -97,6 +100,7 @@ pub struct BingoCard {
     row_limit: i32,
     col_limit: i32,
     sum_of_numbers: i32,
+    last_selected: i32,
 }   // BingoCard
 
 impl BingoCard {
@@ -125,8 +129,18 @@ impl BingoCard {
             row_limit,
             col_limit,
             sum_of_numbers: 0,
+            last_selected: 0,
         }
     }
+
+    fn get_score(&self) -> i32 {
+        (self.index.clone().into_keys().sum::<i32>() - self.sum_of_numbers) * self.last_selected
+    }
+
+    fn set_last_selected(&mut self, last_selected: &i32) {
+        self.last_selected += *last_selected;
+    }
+
     //given a number look up in the index if the number is in the card
     fn is_number_in_card(&self, number: i32) -> bool {
         self.index.contains_key(&number)
@@ -160,14 +174,12 @@ impl BingoCard {
         if self.complete {
            for row in &self.rows {
                 if *row.1 == self.row_limit {
-                     println!("match on row {}", row.0);
                      numbers = self.numbers[*row.0 as usize].clone();
                      return numbers;
                 }
            }
            for col in &self.cols {
                 if *col.1 == self.col_limit {
-                     println!("match on col {}", col.0);
                      numbers = self.numbers.iter().map(|row| row[*col.0 as usize]).collect();
                      return numbers;
                 }
@@ -212,11 +224,6 @@ fn parse(input: &str) -> BingoParlor{
             _ => {},
         }
     }
-    // we need to build an index of every board. The index will be keyed by the number.
-    // The value will be the index of the board that contains the number.
-    // we need to build an array of all the numbers called
-    println!("rollcall: {:?}", rollcall);
-    println!("boards: {:?}", boards);
 
     return BingoParlor::new(boards, rollcall, 5);
 }
@@ -257,7 +264,8 @@ mod tests {
  2  0 12  3  7
 ";
         let mut bingo_parlor = super::parse(input);
-        let result = bingo_parlor.play();
-        assert_eq!(result, 4512);
+        let result: [i32; 2] = bingo_parlor.play();
+        assert_eq!(result[0], 4512);
+        assert_eq!(result[1], 1924);
     }
 }
