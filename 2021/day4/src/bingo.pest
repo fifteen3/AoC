@@ -1,0 +1,13 @@
+digit = _{ ASCII_DIGIT }
+
+eol = _{ "\n" | "\r\n" }
+
+cell = { (" "* ~ digit+) }
+
+cells = { (cell){5} ~ eol* }
+
+board = { (cells){5} } 
+
+rollcall  = { ((digit{1,2})+ ~ ","*)* ~ eol*}
+
+file = { SOI ~ rollcall ~ board+ ~ EOI }
