@@ -6,9 +6,7 @@ use std::collections::VecDeque;
 use std::fmt;
 use std::fs;
 
-use pest::{
-    Parser,
-};
+use pest::Parser;
 
 #[derive(Parser)]
 #[grammar = "bingo.pest"]
@@ -22,9 +20,10 @@ struct BingoParlor {
 
 impl BingoParlor {
     fn new(input_cards: Vec<Vec<Vec<i32>>>, input_picks: Vec<i32>, total_picks: i32) -> Self {
-        let bingo_cards = input_cards.iter().map(|card| {
-            BingoCard::new(card.clone())
-        }).collect();
+        let bingo_cards = input_cards
+            .iter()
+            .map(|card| BingoCard::new(card.clone()))
+            .collect();
         Self {
             cards: bingo_cards,
             picks: input_picks,
@@ -32,27 +31,20 @@ impl BingoParlor {
         }
     }
 
-    fn get_bingo_card(&self, card_index: usize) -> &BingoCard {
-        &self.cards[card_index]
-    }
-
     fn play(&mut self) -> [i32; 2] {
-        let mut winner = BingoCard::new(Vec::new());
-        let mut final_score: i32 = 0;
         let mut numbers_found = VecDeque::new();
         let mut num_winners = 0;
         let mut winners = VecDeque::new();
         let total_cards = self.cards.clone().iter().count();
-        'picks: for picks in self.picks.windows(self.total_picks as usize){
-            'pick: for pick in picks.iter(){
-                    if numbers_found.contains(&pick){
-                        continue 'pick;
-                    }
-                    numbers_found.push_back(pick);
-                'cards: for bingo_card in self.cards.iter_mut(){
+        'picks: for picks in self.picks.windows(self.total_picks as usize) {
+            'pick: for pick in picks.iter() {
+                if numbers_found.contains(&pick) {
+                    continue 'pick;
+                }
+                numbers_found.push_back(pick);
+                for bingo_card in self.cards.iter_mut() {
                     if bingo_card.is_number_in_card(*pick) && !bingo_card.complete {
-                        let location = bingo_card.get_location(*pick);
-                        bingo_card.update_counts(&location.unwrap().clone());
+                        bingo_card.update_counts(*pick);
                         bingo_card.find_complete();
                         if bingo_card.complete {
                             num_winners += 1;
@@ -61,8 +53,7 @@ impl BingoParlor {
                         }
                     } else if bingo_card.complete && num_winners == total_cards {
                         break 'picks;
-                    }
-                    else if num_winners > total_cards {
+                    } else if num_winners > total_cards {
                         break 'picks;
                     }
                 }
@@ -84,24 +75,21 @@ struct BingoCardLocation {
 
 impl BingoCardLocation {
     fn new(row: i32, col: i32) -> Self {
-        Self {
-            row,
-            col,
-        }
+        Self { row, col }
     }
 }
 #[derive(Debug, Clone)]
 pub struct BingoCard {
-    numbers : Vec<Vec<i32>>,
-    index : HashMap<i32, BingoCardLocation>,
-    rows : HashMap<i32, i32>,
-    cols : HashMap<i32, i32>,
+    numbers: Vec<Vec<i32>>,
+    index: HashMap<i32, BingoCardLocation>,
+    rows: HashMap<i32, i32>,
+    cols: HashMap<i32, i32>,
     complete: bool,
     row_limit: i32,
     col_limit: i32,
     sum_of_numbers: i32,
     last_selected: i32,
-}   // BingoCard
+} // BingoCard
 
 impl BingoCard {
     fn new(numbers: Vec<Vec<i32>>) -> Self {
@@ -116,7 +104,10 @@ impl BingoCard {
             row_limit = (numbers[0].len()) as i32;
             for row in 0..row_limit as usize {
                 for col in 0..col_limit as usize {
-                    index.insert(numbers[row][col], BingoCardLocation::new(row.try_into().unwrap(), col.try_into().unwrap()));
+                    index.insert(
+                        numbers[row][col],
+                        BingoCardLocation::new(row.try_into().unwrap(), col.try_into().unwrap()),
+                    );
                 }
             }
         }
@@ -146,14 +137,11 @@ impl BingoCard {
         self.index.contains_key(&number)
     }
 
-    fn get_location(&self, number: i32) -> Option<&BingoCardLocation> {
-        Some(&self.index.get(&number).unwrap())
-    }
-
     // update the row and col counts for the card
-    fn update_counts(&mut self, location: &BingoCardLocation) {
-        let mut row_count = self.rows.entry(location.row).or_insert(0);
-        let mut col_count = self.cols.entry(location.col).or_insert(0);
+    fn update_counts(&mut self, index_loc: i32) {
+        let location = self.index.get(&index_loc).unwrap().clone();
+        let row_count = self.rows.entry(location.row).or_insert(0);
+        let col_count = self.cols.entry(location.col).or_insert(0);
         *row_count += 1;
         *col_count += 1;
         self.sum_of_numbers += self.numbers[location.row as usize][location.col as usize];
@@ -172,20 +160,24 @@ impl BingoCard {
     fn find_complete(&self) -> Vec<i32> {
         let mut numbers = Vec::new();
         if self.complete {
-           for row in &self.rows {
+            for row in &self.rows {
                 if *row.1 == self.row_limit {
-                     numbers = self.numbers[*row.0 as usize].clone();
-                     return numbers;
+                    numbers = self.numbers[*row.0 as usize].clone();
+                    return numbers;
                 }
-           }
-           for col in &self.cols {
+            }
+            for col in &self.cols {
                 if *col.1 == self.col_limit {
-                     numbers = self.numbers.iter().map(|row| row[*col.0 as usize]).collect();
-                     return numbers;
+                    numbers = self
+                        .numbers
+                        .iter()
+                        .map(|row| row[*col.0 as usize])
+                        .collect();
+                    return numbers;
                 }
-           }
-       }
-       numbers
+            }
+        }
+        numbers
     }
 }
 
@@ -201,27 +193,36 @@ impl fmt::Display for BingoCard {
     }
 }
 
-
-
-fn parse(input: &str) -> BingoParlor{
+fn parse(input: &str) -> BingoParlor {
     let mut rollcall: Vec<i32> = Vec::new();
     let mut boards: Vec<Vec<Vec<i32>>> = Vec::new();
-    let file = BingoParser::parse(Rule::file, &input).expect("fail to parse").next().unwrap();
+    let file = BingoParser::parse(Rule::file, &input)
+        .expect("fail to parse")
+        .next()
+        .unwrap();
     for pair in file.into_inner() {
         match pair.as_rule() {
             Rule::rollcall => {
-                rollcall = pair.as_span().as_str().split(",").map(|x| x.trim().parse::<i32>().unwrap()).collect::<Vec<i32>>();
-            },
+                rollcall = pair
+                    .as_span()
+                    .as_str()
+                    .split(",")
+                    .map(|x| x.trim().parse::<i32>().unwrap())
+                    .collect::<Vec<i32>>();
+            }
             Rule::board => {
                 //covert bingo board into tree?
-                let cells = pair.into_inner().map(|x| 
-                    x.into_inner().map( |y| 
-                        y.as_span().as_str().trim().parse::<i32>().unwrap()
-                    ).collect::<Vec<i32>>()
-                ).collect::<Vec<Vec<i32>>>();
+                let cells = pair
+                    .into_inner()
+                    .map(|x| {
+                        x.into_inner()
+                            .map(|y| y.as_span().as_str().trim().parse::<i32>().unwrap())
+                            .collect::<Vec<i32>>()
+                    })
+                    .collect::<Vec<Vec<i32>>>();
                 boards.push(cells);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 
@@ -230,7 +231,6 @@ fn parse(input: &str) -> BingoParlor{
 pub fn read_in_lines(filename: String) -> String {
     let source_file = fs::read_to_string(filename).expect("Failed to read file");
     return source_file;
-
 }
 
 fn main() {
