@@ -1,0 +1,6 @@
+number = { ASCII_DIGIT+ }
+
+point = { number+ ~ "," ~ number+}
+line = { point ~ " -> " ~ point ~ NEWLINE* }
+
+file = { SOI ~ line+ ~ EOI }
