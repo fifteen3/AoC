@@ -13,20 +13,81 @@ use std::hash::{Hash, Hasher};
 pub struct VentParser;
 
 struct Solution {
-    raw: String,
+    lines: Vec<Option<Line<f32>>>,
 }
 
 impl Solution {
-    pub fn new(input: String) -> Self {
-        Self { raw: input }
+    pub fn new(input: Vec<Option<Line<f32>>>) -> Self {
+        Self { lines: input }
     }
 
     pub fn part1(&self) -> String {
-        self.raw.clone()
+        return self.get_vh_intersections().to_string();
     }
 
     pub fn part2(&self) -> String {
-        self.raw.clone()
+        return self.get_intersections().to_string();
+    }
+
+    fn get_intersections(&self) -> i32 {
+        let mut intersections = HashMap::<String, i32>::new();
+        for i in 0..1000 {
+            for j in -1000..0 {
+                let coord = Coordinate {
+                    x: i as f32,
+                    y: j as f32,
+                };
+                self.lines
+                    .iter()
+                    .filter(|line| line.is_some())
+                    .for_each(|line| {
+                        if let Some(line) = line {
+                            if line.intersects(&coord) {
+                                // println!("interx coords: {:#?}", coord);
+                                let keyx = coord.x.to_string();
+                                let keyy = coord.y.to_string();
+                                let key = keyx + "," + &keyy;
+                                let foo = intersections.entry(key).or_insert(0);
+                                *foo += 1;
+                            }
+                        }
+                    });
+            }
+        }
+        intersections.iter().filter(|v| *v.1 >= 2).count() as i32
+    }
+    fn get_vh_intersections(&self) -> i32 {
+        let mut intersections = HashMap::<String, i32>::new();
+        for i in 0..1000 {
+            for j in -1000..0 {
+                let coord = Coordinate {
+                    x: i as f32,
+                    y: j as f32,
+                };
+                self.lines
+                    .iter()
+                    .filter(|line| {
+                        line.is_some()
+                            && (line.unwrap().slope() == 0.0
+                                || line.unwrap().slope() == -0.0
+                                || line.unwrap().slope() == std::f32::INFINITY
+                                || line.unwrap().slope() == std::f32::INFINITY * -1.0)
+                    })
+                    .for_each(|line| {
+                        if let Some(line) = line {
+                            if line.intersects(&coord) {
+                                // println!("interx coords: {:#?}", coord);
+                                let keyx = coord.x.to_string();
+                                let keyy = coord.y.to_string();
+                                let key = keyx + "," + &keyy;
+                                let foo = intersections.entry(key).or_insert(0);
+                                *foo += 1;
+                            }
+                        }
+                    });
+            }
+        }
+        intersections.iter().filter(|v| *v.1 >= 2).count() as i32
     }
 }
 
@@ -74,46 +135,7 @@ fn parse(input: &str) -> Solution {
             None
         })
         .collect::<Vec<Option<Line<f32>>>>();
-    let mut intersections = HashMap::<String, i32>::new();
-    for i in 0..9 {
-        for j in -9..0 {
-            let coord = Coordinate {
-                x: i as f32,
-                y: j as f32,
-            };
-            line_segements
-                .iter()
-                .filter(|line| {
-                    line.is_some()
-                        && (line.unwrap().slope() == 0.0
-                            || line.unwrap().slope() == -0.0
-                            || line.unwrap().slope() == std::f32::INFINITY
-                            || line.unwrap().slope() == std::f32::INFINITY * -1.0)
-                })
-                .for_each(|line| {
-                    if let Some(line) = line {
-                        if line.intersects(&coord) {
-                            // println!("interx coords: {:#?}", coord);
-                            let keyx = coord.x.to_string();
-                            let keyy = coord.y.to_string();
-                            let key = keyx + "," + &keyy;
-                            // println!("key: {}", key);
-                            /*
-                            .iter()
-                            .fold(String::new(), |acc, coord| format!("{}_{}", acc, coord));
-                            */
-                            if coord.x == 7.0 {
-                                println!("x=7 slope: {}", line.slope());
-                            }
-                            let foo = intersections.entry(key).or_insert(0);
-                            *foo += 1;
-                        }
-                    }
-                });
-        }
-    }
-    println!("inties {:#?}", intersections);
-    let solution = Solution::new(input.to_string());
+    let solution = Solution::new(line_segements);
     return solution;
 }
 
@@ -125,7 +147,8 @@ fn read_in_lines(filename: String) -> String {
 fn main() {
     let input = read_in_lines("day5.txt".to_owned());
     let solution = parse(&input);
-    solution.part1();
+    println!("part1: {}", solution.part1());
+    println!("part1: {}", solution.part2());
 }
 
 #[cfg(test)]
