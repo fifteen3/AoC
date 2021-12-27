@@ -13,49 +13,6 @@ fn main() {
     part2(&initial_fish);
 }
 
-const BIRTH_SEED: usize = 8;
-const MOLT_SEED: usize = 6;
-
-#[derive(Debug, Clone, Copy)]
-struct Fish {
-    birth_seed: usize,
-    molt_seed: usize,
-    timer: usize,
-}
-
-impl Fish {
-    fn new(seed_number: usize) -> Self {
-        Fish {
-            timer: seed_number,
-            birth_seed: BIRTH_SEED,
-            molt_seed: MOLT_SEED,
-        }
-    }
-
-    pub fn update(&mut self) -> Option<Fish> {
-        let mut age = self.timer.clone();
-        match age {
-            0 => {
-                age = 6;
-                let child = self.create_child();
-                self.timer = age;
-                return Some(child);
-            }
-            _ => age -= 1,
-        }
-        self.timer = age;
-        None
-    }
-
-    fn create_child(&self) -> Fish {
-        let child = Fish::new(8);
-        child
-    }
-    pub fn age(&self) -> usize {
-        self.timer
-    }
-}
-
 #[derive(Clone)]
 struct FishState {
     count: usize,
@@ -99,7 +56,7 @@ impl Display for FishState {
             .map(|fish| fish.to_string())
             .collect::<Vec<String>>()
             .join(",");
-        write!(f, "{}", fishstate);
+        write!(f, "{}", fishstate).expect("Could not write to formatter");
         Ok(())
     }
 }
@@ -158,7 +115,7 @@ impl Display for Universe {
             .map(|fs| fs.to_string())
             .collect::<Vec<String>>()
             .join("\n");
-        write!(f, "{}", fishstate);
+        write!(f, "{}", fishstate).expect("Could not write to formatter");
         Ok(())
     }
 }
@@ -182,7 +139,7 @@ fn part2(initial_fish: &Vec<usize>) {
 }
 
 mod test {
-    use super::*;
+    use super::{part1, part2, Universe};
     #[test]
     fn test_part1() {
         let input = include_str!("day6.txt");
@@ -193,14 +150,6 @@ mod test {
             .map(|x| x.unwrap())
             .collect::<Vec<usize>>();
         part1(&initial_fish);
-    }
-
-    #[test]
-    fn test_fish() {
-        let f1 = Fish::new(3);
-        let f2 = Fish::new(4);
-        assert_eq!(f1.age(), 3);
-        assert_eq!(f2.age(), 4);
     }
 
     #[test]
