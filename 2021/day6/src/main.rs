@@ -5,26 +5,26 @@ fn main() {
     let input = include_str!("day6.txt");
     let initial_fish = input
         .split(",")
-        .map(|fish| fish.parse::<i32>())
+        .map(|fish| fish.parse::<usize>())
         .filter(|x| x.is_ok())
         .map(|x| x.unwrap())
-        .collect::<Vec<i32>>();
-    dbg!(&initial_fish);
-    part1(initial_fish);
+        .collect::<Vec<usize>>();
+    part1(&initial_fish);
+    part2(&initial_fish);
 }
 
-const BIRTH_SEED: i32 = 8;
-const MOLT_SEED: i32 = 6;
+const BIRTH_SEED: usize = 8;
+const MOLT_SEED: usize = 6;
 
 #[derive(Debug, Clone, Copy)]
 struct Fish {
-    birth_seed: i32,
-    molt_seed: i32,
-    timer: i32,
+    birth_seed: usize,
+    molt_seed: usize,
+    timer: usize,
 }
 
 impl Fish {
-    fn new(seed_number: i32) -> Self {
+    fn new(seed_number: usize) -> Self {
         Fish {
             timer: seed_number,
             birth_seed: BIRTH_SEED,
@@ -51,48 +51,43 @@ impl Fish {
         let child = Fish::new(8);
         child
     }
-    pub fn age(&self) -> i32 {
+    pub fn age(&self) -> usize {
         self.timer
     }
 }
 
 #[derive(Clone)]
 struct FishState {
-    count: i32,
-    population: Vec<Fish>,
+    count: usize,
+    population: [usize; 9],
 }
 
 impl FishState {
-    fn new(last_pop: Vec<Fish>) -> Self {
+    fn new(last_pop: [usize; 9]) -> Self {
         FishState {
-            count: last_pop.clone().len() as i32,
+            count: last_pop.clone().len() as usize,
             population: last_pop.clone(),
         }
     }
 
     fn update(&mut self) {
         let last_pop = self.population.clone();
-        let mut old_pop = Vec::<Fish>::new();
-        let mut new_pop = Vec::<Fish>::new();
-        let mut current_pop = last_pop.len();
-        for f in 0..current_pop {
-            let mut fish = last_pop[f].clone();
-
-            let child = fish.update();
-            old_pop.push(fish);
-            if let Some(child) = child {
-                new_pop.push(child);
-            }
-        }
-        let combined_pop = old_pop
-            .iter()
-            .chain(new_pop.iter())
-            .cloned()
-            .collect::<Vec<_>>();
-        self.population = combined_pop.clone();
+        let mut current_pop: [usize; 9] = [0; 9];
+        let gen: usize = last_pop[0];
+        current_pop[0] = last_pop[1];
+        current_pop[1] = last_pop[2];
+        current_pop[2] = last_pop[3];
+        current_pop[3] = last_pop[4];
+        current_pop[4] = last_pop[5];
+        current_pop[5] = last_pop[6];
+        current_pop[6] = last_pop[7] + gen;
+        current_pop[7] = last_pop[8];
+        current_pop[8] = gen;
+        self.population = current_pop.clone();
+        self.count = current_pop.iter().sum::<usize>();
     }
 
-    fn count_fish(&self) -> i32 {
+    fn count_fish(&self) -> usize {
         self.count
     }
 }
@@ -101,7 +96,7 @@ impl Display for FishState {
         let fishstate = self
             .population
             .iter()
-            .map(|fish| fish.age().to_string())
+            .map(|fish| fish.to_string())
             .collect::<Vec<String>>()
             .join(",");
         write!(f, "{}", fishstate);
@@ -110,7 +105,7 @@ impl Display for FishState {
 }
 struct Universe {
     history: Vec<FishState>,
-    lifetime: i32,
+    lifetime: usize,
 }
 /***
  * The universe will keep the total population of all fish as a Vector of Fish
@@ -130,12 +125,11 @@ struct Universe {
  *
 */
 impl Universe {
-    fn new(inital_fish: Vec<i32>, lifetime: i32) -> Self {
+    fn new(inital_fish: Vec<usize>, lifetime: usize) -> Self {
         let mut history = Vec::<FishState>::new();
-        let mut population = Vec::<Fish>::new();
+        let mut population: [usize; 9] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         for fish in inital_fish {
-            dbg!(&fish);
-            population.push(Fish::new(fish));
+            population[fish as usize] += 1;
         }
         let first_state = FishState::new(population);
         history.push(first_state);
@@ -149,7 +143,7 @@ impl Universe {
     }
 
     fn tick(&mut self) {
-        let last_pop: Vec<Fish> = self.history[self.history.len() - 1].population.clone();
+        let last_pop: [usize; 9] = self.history[self.history.len() - 1].population.clone();
         let mut new_state = FishState::new(last_pop);
         new_state.update();
         self.history.push(new_state);
@@ -169,23 +163,21 @@ impl Display for Universe {
     }
 }
 
-fn part1(initial_fish: Vec<i32>) {
-    let mut universe = Universe::new(initial_fish, 80);
+fn part1(initial_fish: &Vec<usize>) {
+    let mut universe = Universe::new(initial_fish.clone(), 80);
     universe.run();
-    println!("{}", universe.history.len());
     println!(
         "total pop: {}",
-        universe.history.last().unwrap().population.len()
+        universe.history.last().unwrap().count_fish()
     );
 }
 
-fn part2(initial_fish: Vec<i32>) {
-    let mut universe = Universe::new(initial_fish, 256);
+fn part2(initial_fish: &Vec<usize>) {
+    let mut universe = Universe::new(initial_fish.clone(), 256);
     universe.run();
-    println!("{}", universe.history.len());
     println!(
         "total pop: {}",
-        universe.history.last().unwrap().population.len()
+        universe.history.last().unwrap().count_fish()
     );
 }
 
@@ -196,11 +188,11 @@ mod test {
         let input = include_str!("day6.txt");
         let initial_fish = input
             .split(",|\r\n|\n")
-            .map(|fish| fish.parse::<i32>())
+            .map(|fish| fish.parse::<usize>())
             .filter(|x| x.is_ok())
             .map(|x| x.unwrap())
-            .collect::<Vec<i32>>();
-        part1(initial_fish);
+            .collect::<Vec<usize>>();
+        part1(&initial_fish);
     }
 
     #[test]
@@ -212,41 +204,23 @@ mod test {
     }
 
     #[test]
-    fn test_universe() {
-        let mut universe = Universe::new(vec![3, 4, 3, 1, 2], 10);
-        universe.run();
-        assert_eq!(universe.history.len(), 4); // lifetime + 1 for initial state
-                                               //dbg!(&universe.history);
-        assert_eq!(universe.history.last().unwrap().population.len(), 6);
-    }
-
-    #[test]
     fn test_universe18() {
         let mut universe = Universe::new(vec![3, 4, 3, 1, 2], 18);
         universe.run();
-        println!("{}", universe);
-        assert_eq!(universe.history.len(), 19); // lifetime + 1 for initial state
-                                                //dbg!(&universe.history);
-        assert_eq!(universe.history.last().unwrap().population.len(), 26);
+        assert_eq!(universe.history.last().unwrap().count_fish(), 26);
     }
 
     #[test]
     fn test_universe80() {
         let mut universe = Universe::new(vec![3, 4, 3, 1, 2], 80);
         universe.run();
-        println!("{}", universe);
-        assert_eq!(universe.history.len(), 81); // lifetime + 1 for initial state
-                                                //dbg!(&universe.history);
-        assert_eq!(universe.history.last().unwrap().population.len(), 5934);
+        assert_eq!(universe.history.last().unwrap().count_fish(), 5934);
     }
 
     #[test]
     fn test_universe256() {
         let mut universe = Universe::new(vec![3, 4, 3, 1, 2], 256);
         universe.run();
-        assert_eq!(
-            universe.history.last().unwrap().population.len(),
-            26984457539
-        );
+        assert_eq!(universe.history.last().unwrap().count_fish(), 26984457539);
     }
 }
