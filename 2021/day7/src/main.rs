@@ -121,7 +121,6 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
     fn part1() {
         let input = "16,1,2,0,4,2,7,1,2,14";
@@ -134,6 +133,6 @@ mod tests {
         let input = "16,1,2,0,4,2,7,1,2,14";
         let solution = super::parse(input);
         let part2 = solution.part2();
-        assert_eq!(part2, 5);
+        assert_eq!(part2, 168);
     }
 }
