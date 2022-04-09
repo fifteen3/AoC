@@ -1,8 +1,6 @@
 use std::fs;
 use std::collections::HashMap;
-use pest::{
-    Parser,
-};
+use pest::Parser;
 
 #[derive(Parser)]
 #[grammar = "sub_directions.pest"]
@@ -45,14 +43,25 @@ impl Diagnostics {
     pub fn get_power(&mut self, source: String) -> isize {
         let mut gamma: Vec<String> = Vec::new();
         let mut epsilon: Vec<String> = Vec::new();
+        println!("number of bits: {}", self.number_of_bits);
         for bits in 0..self.number_of_bits {
+            println!("bits: {}", bits);
             gamma.push(self.most_common_bit(bits.to_string(), source.clone() )); 
             epsilon.push(self.least_common_bit(bits.to_string(), source.clone() )); 
         }
-        let gamma_string = gamma.join("");
         let epsilon_string = epsilon.join("");
-        let power = isize::from_str_radix(&gamma_string, 2).unwrap() * isize::from_str_radix(&epsilon_string, 2).unwrap();
-        return power;
+        println!("source: {}", source);
+        println!("gamma: {}", &gamma.join(""));
+        let first = match isize::from_str_radix(&gamma.join(""), 2) {
+            Ok(n) => n,
+            _ => 0,
+        };
+        let second = match isize::from_str_radix(&epsilon_string, 2) {
+            Ok(n) => n,
+            _ => 0,
+        };
+
+        first * second
     }
 
     pub fn filter_by_bit(&self, source: String, bit_index: String, bit_value: String) -> String {
@@ -152,14 +161,11 @@ mod tests {
     #[test]
     fn test_parse_file() {
         let input = "00100\n11110\n10110\n10111\n10101\n01111\n00111\n11100\n10000\n11001\n00010\n01010".to_string();
-        let number_of_bits = 5;
-        let mut diag = Diagnostics::new(HashMap::new(), 0, input.clone());
-        let report = diag.parse_directions(input.clone());
-        let result = diag.output_source();
+        let mut diag = Diagnostics::new( 5, input.clone());
         let expected = 198;
-        assert_eq!(diag.get_power(input.clone()), expected); 
-        println!("CO2 rating: {}", diag.get_co2_rating());
-        println!("oxygen rating: {}", diag.determine_oxygen_rating());
-        println!("life support rating: {}", diag.get_life_support_rating());
+        assert_eq!(diag.get_power(input), expected); 
+        println!(r#"CO2 rating: {}"#, diag.get_co2_rating());
+        println!(r#"oxygen rating: {}"#, diag.determine_oxygen_rating());
+        println!(r#"life support rating: {}"#, diag.get_life_support_rating());
     }
 }
